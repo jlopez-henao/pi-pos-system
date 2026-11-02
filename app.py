@@ -36,11 +36,17 @@ def init_db():
     cursor.execute("SELECT COUNT(*) FROM menu")
     if cursor.fetchone()[0] == 0:
         sample_items = [
-            ('Burger', 'Mains', 12.50),
-            ('Fries', 'Sides', 4.00),
-            ('Soda', 'Drinks', 2.50),
+            ('Sopa', 'Sides', 8.00),
+            ('Bandeja paisa', 'Mains', 23.00),
+            ('Cochino frito', 'Mains', 12.00),
             ('Pasta', 'Mains', 14.00),
-            ('Ice Cream', 'Dessert', 5.00)
+            ('Agua', 'Drinks', 1.00),
+            ('Jugos naturales', 'Drinks', 2.50),
+            ('Papelon', 'Drinks', 2.00),
+            ('Refrescos', 'Drinks', 2.00),
+            ('Malta', 'Drinks', 1.00),
+            ('Tiramisu', 'Dessert', 3.00),
+            ('Quesillo', 'Dessert', 6.00),
         ]
         cursor.executemany("INSERT INTO menu (name, category, price) VALUES (?, ?, ?)", sample_items)
         
@@ -146,6 +152,35 @@ def pay_bill(table_num):
     conn.commit()
     conn.close()
     return redirect(url_for('waiter_page'))
+
+@app.route('/manager')
+def manager_page():
+    """Manager Dashboard showing total sales and paid orders history."""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    # Calculate total revenue from all paid orders
+    cursor.execute('''
+        SELECT SUM(menu.price) 
+        FROM orders 
+        JOIN menu ON orders.item_id = menu.id 
+        WHERE orders.status = 'Paid'
+    ''')
+    total_sales = cursor.fetchone()[0]
+    total_sales = total_sales if total_sales is not None else 0.0
+    
+    # Get a list of all paid orders for history breakdown
+    cursor.execute('''
+        SELECT orders.table_number, menu.name, menu.price, orders.timestamp 
+        FROM orders 
+        JOIN menu ON orders.item_id = menu.id 
+        WHERE orders.status = 'Paid'
+        ORDER BY orders.timestamp DESC
+    ''')
+    paid_orders = cursor.fetchall()
+    
+    conn.close()
+    return render_template('manager.html', total_sales=total_sales, paid_orders=paid_orders)
 
 if __name__ == '__main__':
     # host='0.0.0.0' allows external devices on the same Wi-Fi network to connect
