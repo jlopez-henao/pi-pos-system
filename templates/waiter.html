@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Waiter POS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow">
+        <h2 class="text-xl font-bold mb-4 text-center">New Order</h2>
+        
+        <label class="block font-semibold mb-1">Table Number:</label>
+        <input type="number" id="tableNum" value="1" class="w-full border p-2 rounded mb-4 text-lg">
+
+        <h3 class="font-semibold mb-2">Menu</h3>
+        <div class="space-y-2 mb-6">
+            {% for item in menu %}
+            <button onclick="addToCart({{ item[0] }}, '{{ item[1] }}', {{ item[3] }})" 
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded text-left font-semibold flex justify-between">
+                <span>{{ item[1] }}</span>
+                <span>${{ "%.2f"|format(item[3]) }}</span>
+            </button>
+            {% endfor %}
+        </div>
+
+        <h3 class="font-semibold mb-2">Cart:</h3>
+        <div id="cart" class="border p-3 rounded mb-4 min-h-[80px] bg-gray-50 text-sm"></div>
+
+        <button onclick="sendOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded">
+            Send to Kitchen
+        </button>
+    </div>
+
+    <script>
+        let cart = [];
+        function addToCart(id, name, price) {
+            cart.push({id, name, price});
+            renderCart();
+        }
+        function renderCart() {
+            const container = document.getElementById('cart');
+            if (cart.length === 0) { container.innerHTML = 'Empty'; return; }
+            container.innerHTML = cart.map(i => `<div>- ${i.name} ($${i.price.toFixed(2)})</div>`).join('');
+        }
+        async function sendOrder() {
+            const table = document.getElementById('tableNum').value;
+            if (!table || cart.length === 0) return alert('Select table and add items');
+            
+            await fetch('/submit_order', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ table_number: parseInt(table), items: cart })
+            });
+            alert('Order sent!');
+            cart = [];
+            renderCart();
+        }
+    </script>
+</body>
+</html>
