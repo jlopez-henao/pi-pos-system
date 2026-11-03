@@ -126,7 +126,7 @@ def complete_order(order_id):
     conn.close()
     return jsonify({"success": True})
 
-@app.route('/bill/<int:table_num>')
+@app.route('/cuenta/<int:table_num>')
 def bill_page(table_num):
     """Calculates unpaid total for a table."""
     conn = sqlite3.connect(DB_NAME)
@@ -141,7 +141,7 @@ def bill_page(table_num):
     
     total = sum(i[1] for i in items)
     conn.close()
-    return render_template('bill.html', table=table_num, items=items, total=total)
+    return render_template('cuenta.html', table=table_num, items=items, total=total)
 
 @app.route('/pay_bill/<int:table_num>', methods=['POST'])
 def pay_bill(table_num):
@@ -153,7 +153,7 @@ def pay_bill(table_num):
     conn.close()
     return redirect(url_for('waiter_page'))
 
-@app.route('/manager')
+@app.route('/gerente')
 def manager_page():
     """Manager Dashboard showing total sales and paid orders history."""
     conn = sqlite3.connect(DB_NAME)
@@ -180,7 +180,7 @@ def manager_page():
     paid_orders = cursor.fetchall()
     
     conn.close()
-    return render_template('manager.html', total_sales=total_sales, paid_orders=paid_orders)
+    return render_template('gerente.html', total_sales=total_sales, paid_orders=paid_orders)
 
 if __name__ == '__main__':
     # host='0.0.0.0' allows external devices on the same Wi-Fi network to connect
