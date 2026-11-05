@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kitchen Display</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-6">
+    <h1 class="text-3xl font-bold mb-6">Ordenes activas en la cocina</h1>
+    <div id="ordersContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+
+    <script>
+        async function loadOrders() {
+            const res = await fetch('/api/kitchen_orders');
+            const orders = await res.json();
+            
+            // Group by Table
+            const grouped = {};
+            orders.forEach(o => {
+                if (!grouped[o.table]) grouped[o.table] = [];
+                grouped[o.table].push(o);
+            });
+
+            const container = document.getElementById('ordersContainer');
+            container.innerHTML = '';
+
+            for (const table in grouped) {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-800 border border-gray-700 rounded-lg p-4 shadow-lg';
+                
+                let itemsHtml = grouped[table].map(item => `
+                    <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span class="text-lg font-medium">${item.item}</span>
+                        <button onclick="markDone(${item.id})" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-sm">Entregado</button>
+                    </div>
+                `).join('');
+
+                card.innerHTML = `
+                    <div class="text-2xl font-bold text-yellow-400 mb-2">Mesa ${table}</div>
+                    <div>${itemsHtml}</div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        async function markDone(orderId) {
+            await fetch('/api/complete_order/' + orderId, { method: 'POST' });
+            loadOrders();
+        }
+
+        setInterval(loadOrders, 3000); // Poll every 3 seconds
+        loadOrders();
+    </script>
+</body>
+</html>
