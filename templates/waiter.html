@@ -7,12 +7,12 @@
 </head>
 <body class="bg-gray-100 p-4">
     <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow">
-        <h2 class="text-xl font-bold mb-4 text-center">New Order</h2>
+        <h2 class="text-xl font-bold mb-4 text-center">Pedido nuevo</h2>
         
-        <label class="block font-semibold mb-1">Table Number:</label>
+        <label class="block font-semibold mb-1">Número de mesa:</label>
         <input type="number" id="tableNum" value="1" class="w-full border p-2 rounded mb-4 text-lg">
 
-        <h3 class="font-semibold mb-2">Menu</h3>
+        <h3 class="font-semibold mb-2">Carta</h3>
         <div class="space-y-2 mb-6">
             {% for item in menu %}
             <button onclick="addToCart({{ item[0] }}, '{{ item[1] }}', {{ item[3] }})" 
@@ -23,11 +23,11 @@
             {% endfor %}
         </div>
 
-        <h3 class="font-semibold mb-2">Cart:</h3>
+        <h3 class="font-semibold mb-2">Orden:</h3>
         <div id="cart" class="border p-3 rounded mb-4 min-h-[80px] bg-gray-50 text-sm"></div>
 
         <button onclick="sendOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded">
-            Send to Kitchen
+            Enviar a la cocina
         </button>
     </div>
 
