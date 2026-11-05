@@ -89,10 +89,10 @@ def submit_order():
     conn.close()
     return jsonify({"success": True})
 
-@app.route('/kitchen')
+@app.route('/cocina')
 def kitchen_page():
     """Kitchen Display System UI."""
-    return render_template('kitchen.html')
+    return render_template('cocina.html')
 
 @app.route('/api/kitchen_orders')
 def get_kitchen_orders():
