@@ -33,6 +33,57 @@
 
     <script>
         let cart = [];
+
+        function addToCart(id, name, price) {
+            cart.push({id, name, price});
+            renderCart();
+        }
+
+        function removeFromCart(index) {
+            // Remove the specific item by its position in the cart array
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart');
+            if (cart.length === 0) {
+                container.innerHTML = '<span class="text-gray-400">Cart is empty</span>';
+                return;
+            }
+
+            // Loop through the cart with its index so we know which one to delete
+            container.innerHTML = cart.map((i, index) => `
+                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                    <span>${i.name} (<span class="text-gray-600">$${i.price.toFixed(2)}</span>)</span>
+                    <button onclick="removeFromCart(${index})" class="bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1 rounded text-xs font-semibold">
+                        Quitar
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function sendOrder() {
+            const table = document.getElementById('tableNum').value;
+            if (!table || cart.length === 0) return alert('Select table and add items');
+
+            const response = await fetch('/submit_order', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ table_number: parseInt(table), items: cart })
+            });
+
+            if (response.ok) {
+                alert('Orden enviada!');
+                cart = [];
+                renderCart();
+            } else {
+                alert('Error enviando orden.');
+            }
+        }
+    </script>
+    <!-- <script>
+        let cart = [];
         function addToCart(id, name, price) {
             cart.push({id, name, price});
             renderCart();
@@ -55,6 +106,6 @@
             cart = [];
             renderCart();
         }
-    </script>
+    </script> -->
 </body>
 </html>
