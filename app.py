@@ -4,35 +4,22 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 app = Flask(__name__)
 DB_NAME = "restaurant.db"
 
-# def init_db():  --- BLOCK TO BE REMOVED
-#     """Sets up database tables and initial sample menu."""
-#     conn = sqlite3.connect(DB_NAME)
-#     cursor = conn.cursor()
-
-#     # Menu table
-#     cursor.execute('''
-#         CREATE TABLE IF NOT EXISTS menu (
-#             id INTEGER PRIMARY KEY AUTOINCREMENT,
-#             name TEXT NOT NULL,
-#             category TEXT NOT NULL,
-#             price REAL NOT NULL
-#         )
-#     ''')
-
 def init_db():
-    conn = sqlite3.connect('restaurant.db')
+    """Sets up database tables and initial sample menu."""
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+
+    # Menu table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS orders (
+        CREATE TABLE IF NOT EXISTS menu (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            total REAL,
-            waiter_name TEXT
+            name TEXT NOT NULL,
+            category TEXT NOT NULL,
+            price REAL NOT NULL
         )
     ''')
-    conn.commit()
-    conn.close()
 
-    # Orders table
+    # Orders table (Estructura original limpia con waiter_name añadido)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,7 +62,7 @@ def init_db():
             ('Marqueza', 'Dessert', 3.00),
         ]
         cursor.executemany("INSERT INTO menu (name, category, price) VALUES (?, ?, ?)", sample_items)
-        
+
     conn.commit()
     conn.close()
 
@@ -103,7 +90,7 @@ def submit_order():
     
     if not table_num or not items:
         return jsonify({"success": False, "message": "Missing table or items"}), 400
-        
+
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     for item in items:
@@ -134,7 +121,7 @@ def get_kitchen_orders():
     ''')
     rows = cursor.fetchall()
     conn.close()
-    
+
     orders = []
     for r in rows:
         orders.append({
@@ -164,41 +151,27 @@ def bill_page(table_num):
         WHERE orders.table_number = ? AND orders.status != 'Paid'
     ''', (table_num,))
     items = cursor.fetchall()
-    
+
     total = sum(i[1] for i in items)
     conn.close()
     return render_template('cuenta.html', table=table_num, items=items, total=total)
 
-# @app.route('/pay_bill/<int:table_num>', methods=['POST'])
-# def pay_bill(table_num):
-#     """Marks all orders for a table as Paid."""
-#     conn = sqlite3.connect(DB_NAME)
-#     cursor = conn.cursor()
-#     cursor.execute("UPDATE orders SET status = 'Paid' WHERE table_number = ? AND status != 'Paid'", (table_num,))
-#     conn.commit()
-#     conn.close()
-#     return redirect(url_for('waiter_page'))
-
 @app.route('/pay_bill/<int:table>', methods=['POST'])
 def pay_bill(table):
-    # Capturamos los datos enviados desde cuenta.html
+    """Actualiza las órdenes de la mesa a 'Paid' y asigna el mesero."""
     waiter_name = request.form.get('waiter_name')
-    final_total = request.form.get('final_total')
-    
-    # Opcional: imprime esto en la terminal para verificar que llegan los datos
-    print(f"DEBUG -> Mesero: {waiter_name}, Total: {final_total}")
 
-    conn = sqlite3.connect('restaurant.db')
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
-    # Insertamos en la base de datos
+
+    # Actualizamos las órdenes pendientes de esta mesa colocándolas como 'Paid' y guardando el mesero
     cursor.execute(
-        "INSERT INTO orders (total, waiter_name) VALUES (?, ?)",
-        (final_total, waiter_name)
+        "UPDATE orders SET status = 'Paid', waiter_name = ? WHERE table_number = ? AND status != 'Paid'",
+        (waiter_name, table)
     )
     conn.commit()
     conn.close()
-    
+
     return redirect(url_for('waiter_page'))
 
 @app.route('/gerente')
@@ -206,8 +179,7 @@ def manager_page():
     """Manager Dashboard showing total sales and paid orders history."""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
-    # Calculate total revenue from all paid orders
+
     cursor.execute('''
         SELECT SUM(menu.price) 
         FROM orders 
@@ -217,7 +189,6 @@ def manager_page():
     total_sales = cursor.fetchone()[0]
     total_sales = total_sales if total_sales is not None else 0.0
 
-    # Get a list of all paid orders for history breakdown
     cursor.execute('''
         SELECT orders.table_number, menu.name, menu.price, orders.timestamp 
         FROM orders 
@@ -232,22 +203,27 @@ def manager_page():
 
 @app.route('/reporte-meseros')
 def reporte_meseros():
-    conn = sqlite3.connect('restaurant.db')
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
-    # Consulta SQL que agrupa por mesero y suma el total de sus ventas
+
+    # Calculamos el total de ventas por mesero sumando el precio de los items pagados por él
     cursor.execute('''
-        SELECT waiter_name, SUM(total) as total_ventas, COUNT(*) as total_ordenes 
+        SELECT orders.waiter_name, SUM(menu.price) as total_ventas, COUNT(orders.id) as total_ordenes 
         FROM orders 
-        WHERE waiter_name IS NOT NULL 
-        GROUP BY waiter_name
+        JOIN menu ON orders.item_id = menu.id
+        WHERE orders.status = 'Paid' AND orders.waiter_name IS NOT NULL 
+        GROUP BY orders.waiter_name
     ''')
     reporte = cursor.fetchall()
     conn.close()
-    
+
     return render_template('reporte_meseros.html', reporte=reporte)
 
 if __name__ == '__main__':
+    # Borramos la base de datos vieja con errores para que se cree limpia con la estructura correcta
+    import os
+    if os.path.exists(DB_NAME):
+        os.remove(DB_NAME)
+
     init_db()
-    # host='0.0.0.0' allows external devices on the same Wi-Fi network to connect
     app.run(host='0.0.0.0', port=8080, debug=True)
