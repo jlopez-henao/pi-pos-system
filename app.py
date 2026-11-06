@@ -184,4 +184,4 @@ def manager_page():
 
 if __name__ == '__main__':
     # host='0.0.0.0' allows external devices on the same Wi-Fi network to connect
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
