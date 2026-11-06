@@ -52,9 +52,13 @@ def init_db():
             ('Jugos naturales', 'Drinks', 2.50),
             ('Papelon', 'Drinks', 2.00),
             ('Refrescos', 'Drinks', 2.00),
+            ('Refrescos pequeño', 'Drinks', 1.50),
             ('Malta', 'Drinks', 1.00),
+            ('Cerveza', 'Drinks', 1.00),
+            ('Caroreña', 'Drinks', 2.50),
             ('Tiramisu', 'Dessert', 3.00),
             ('Quesillo', 'Dessert', 6.00),
+            ('Marqueza', 'Dessert', 3.00),
         ]
         cursor.executemany("INSERT INTO menu (name, category, price) VALUES (?, ?, ?)", sample_items)
         
