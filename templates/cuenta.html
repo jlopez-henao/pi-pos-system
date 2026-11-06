@@ -3,7 +3,52 @@
 <head>
     <title>Bill for Table {{ table }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Add your print CSS right here -->
+    <style>
+    @media print {
+        @page {
+            size: 80mm auto;
+            margin: 0mm;
+        }
+
+        html, body {
+            width: 80mm;
+            margin: 0;
+            padding: 2mm;
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+            line-height: 1.1;
+            color: #000;
+        }
+
+        h1, h2, h3 {
+            font-size: 12pt;
+            margin: 2px 0;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+
+        th, td {
+            padding: 1px 0;
+            word-break: break-all;
+        }
+
+        .no-print, button, nav {
+            display: none !important;
+        }
+    }
+    </style>
 </head>
+<!-- <head>
+    <title>Bill for Table {{ table }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head> -->
 <body class="bg-gray-100 p-6 flex justify-center">
     <div class="bg-white p-6 rounded shadow-md w-full max-w-sm">
         <h2 class="text-2xl font-bold mb-4 text-center">Mesa {{ table }} cuenta</h2>

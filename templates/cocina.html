@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
     <title>Kitchen Display</title>
@@ -40,6 +40,127 @@
                 `;
                 container.appendChild(card);
             }
+        }
+
+        async function markDone(orderId) {
+            await fetch('/api/complete_order/' + orderId, { method: 'POST' });
+            loadOrders();
+        }
+
+        setInterval(loadOrders, 3000); // Poll every 3 seconds
+        loadOrders();
+    </script>
+</body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kitchen Display & Bills</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-6">
+    <h1 class="text-3xl font-bold mb-6">Ordenes activas en la cocina</h1>
+    <div id="ordersContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+
+    <script>
+        async function loadOrders() {
+            const res = await fetch('/api/kitchen_orders');
+            const orders = await res.json();
+            
+            // Group by Table
+            const grouped = {};
+            orders.forEach(o => {
+                if (!grouped[o.table]) grouped[o.table] = [];
+                grouped[o.table].push(o);
+            });
+
+            const container = document.getElementById('ordersContainer');
+            container.innerHTML = '';
+
+            for (const table in grouped) {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-800 border border-gray-700 rounded-lg p-4 shadow-lg flex flex-col justify-between';
+                
+                // Build item rows and save raw data for printing
+                let itemsListHtml = '';
+                let rawItemsForPrint = [];
+
+                grouped[table].forEach(item => {
+                    itemsListHtml += `
+                        <div class="flex justify-between items-center py-2 border-b border-gray-700">
+                            <span class="text-lg font-medium">${item.item}</span>
+                            <button onclick="markDone(${item.id})" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-sm">Entregado</button>
+                        </div>
+                    `;
+                    rawItemsForPrint.push(`<div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #000;"><span>${item.item}</span><span>1</span></div>`);
+                });
+
+                card.innerHTML = `
+                    <div>
+                        <div class="text-2xl font-bold text-yellow-400 mb-2">Mesa ${table}</div>
+                        <div>${itemsListHtml}</div>
+                    </div>
+                    <div class="mt-4 pt-2 border-t border-gray-700">
+                        <button onclick='printTableBill("${table}", ${JSON.stringify(rawItemsForPrint.join(''))})' class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded text-sm font-bold flex items-center justify-center gap-2">
+                            🖨️ Imprimir Cuenta Mesa ${table}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        // Dedicated thermal printer window generator for POS-203 (80mm)
+        function printTableBill(tableNum, itemsHtml) {
+            const printWindow = window.open('', '_blank', 'width=400,height=600');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Cuenta - Mesa ${tableNum}</title>
+                    <style>
+                        @page { size: 80mm auto; margin: 0; }
+                        body {
+                            font-family: 'Courier New', monospace;
+                            font-size: 11pt;
+                            width: 72mm;
+                            margin: 0 auto;
+                            padding: 4mm 0;
+                            color: #000;
+                            background: #fff;
+                        }
+                        .header {
+                            text-align: center;
+                            font-size: 14pt;
+                            font-weight: bold;
+                            margin-bottom: 10px;
+                            border-bottom: 2px solid #000;
+                            padding-bottom: 5px;
+                        }
+                        .footer {
+                            text-align: center;
+                            margin-top: 15px;
+                            font-size: 9pt;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">CUENTA - MESA ${tableNum}</div>
+                    <div>${itemsHtml}</div>
+                    <div class="footer">¡Gracias por su visita!</div>
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            window.close();
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
 
         async function markDone(orderId) {

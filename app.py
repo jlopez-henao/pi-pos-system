@@ -176,7 +176,7 @@ def manager_page():
     ''')
     total_sales = cursor.fetchone()[0]
     total_sales = total_sales if total_sales is not None else 0.0
-    
+
     # Get a list of all paid orders for history breakdown
     cursor.execute('''
         SELECT orders.table_number, menu.name, menu.price, orders.timestamp 
@@ -186,7 +186,7 @@ def manager_page():
         ORDER BY orders.timestamp DESC
     ''')
     paid_orders = cursor.fetchall()
-    
+
     conn.close()
     return render_template('gerente.html', total_sales=total_sales, paid_orders=paid_orders)
 
