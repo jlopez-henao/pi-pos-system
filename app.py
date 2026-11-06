@@ -24,6 +24,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             table_number INTEGER NOT NULL,
+            waiter_name TEXT,
             item_id INTEGER NOT NULL,
             notes TEXT,
             status TEXT DEFAULT 'Pending', -- Pending, Ready, Paid
@@ -155,14 +156,36 @@ def bill_page(table_num):
     conn.close()
     return render_template('cuenta.html', table=table_num, items=items, total=total)
 
-@app.route('/pay_bill/<int:table_num>', methods=['POST'])
-def pay_bill(table_num):
-    """Marks all orders for a table as Paid."""
-    conn = sqlite3.connect(DB_NAME)
+# @app.route('/pay_bill/<int:table_num>', methods=['POST'])
+# def pay_bill(table_num):
+#     """Marks all orders for a table as Paid."""
+#     conn = sqlite3.connect(DB_NAME)
+#     cursor = conn.cursor()
+#     cursor.execute("UPDATE orders SET status = 'Paid' WHERE table_number = ? AND status != 'Paid'", (table_num,))
+#     conn.commit()
+#     conn.close()
+#     return redirect(url_for('waiter_page'))
+
+@app.route('/pay_bill/<int:table>', methods=['POST'])
+def pay_bill(table):
+    # Capturamos los datos enviados desde cuenta.html
+    waiter_name = request.form.get('waiter_name')
+    final_total = request.form.get('final_total')
+    
+    # Opcional: imprime esto en la terminal para verificar que llegan los datos
+    print(f"DEBUG -> Mesero: {waiter_name}, Total: {final_total}")
+
+    conn = sqlite3.connect('restaurant.db')
     cursor = conn.cursor()
-    cursor.execute("UPDATE orders SET status = 'Paid' WHERE table_number = ? AND status != 'Paid'", (table_num,))
+    
+    # Insertamos en la base de datos
+    cursor.execute(
+        "INSERT INTO orders (total, waiter_name) VALUES (?, ?)",
+        (final_total, waiter_name)
+    )
     conn.commit()
     conn.close()
+    
     return redirect(url_for('waiter_page'))
 
 @app.route('/gerente')
@@ -193,6 +216,23 @@ def manager_page():
 
     conn.close()
     return render_template('gerente.html', total_sales=total_sales, paid_orders=paid_orders)
+
+@app.route('/reporte-meseros')
+def reporte_meseros():
+    conn = sqlite3.connect('restaurant.db')
+    cursor = conn.cursor()
+    
+    # Consulta SQL que agrupa por mesero y suma el total de sus ventas
+    cursor.execute('''
+        SELECT waiter_name, SUM(total) as total_ventas, COUNT(*) as total_ordenes 
+        FROM orders 
+        WHERE waiter_name IS NOT NULL 
+        GROUP BY waiter_name
+    ''')
+    reporte = cursor.fetchall()
+    conn.close()
+    
+    return render_template('reporte_meseros.html', reporte=reporte)
 
 if __name__ == '__main__':
     # host='0.0.0.0' allows external devices on the same Wi-Fi network to connect
