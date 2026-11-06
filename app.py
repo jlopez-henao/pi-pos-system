@@ -201,7 +201,7 @@ def manager_page():
     conn.close()
     return render_template('gerente.html', total_sales=total_sales, paid_orders=paid_orders)
 
-@app.route('/reporte-meseros')
+@app.route('/reporte-mesoneros')
 def reporte_meseros():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
