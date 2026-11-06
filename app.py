@@ -4,21 +4,34 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 app = Flask(__name__)
 DB_NAME = "restaurant.db"
 
+# def init_db():  --- BLOCK TO BE REMOVED
+#     """Sets up database tables and initial sample menu."""
+#     conn = sqlite3.connect(DB_NAME)
+#     cursor = conn.cursor()
+
+#     # Menu table
+#     cursor.execute('''
+#         CREATE TABLE IF NOT EXISTS menu (
+#             id INTEGER PRIMARY KEY AUTOINCREMENT,
+#             name TEXT NOT NULL,
+#             category TEXT NOT NULL,
+#             price REAL NOT NULL
+#         )
+#     ''')
+
 def init_db():
-    """Sets up database tables and initial sample menu."""
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect('restaurant.db')
     cursor = conn.cursor()
-    
-    # Menu table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS menu (
+        CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            category TEXT NOT NULL,
-            price REAL NOT NULL
+            total REAL,
+            waiter_name TEXT
         )
     ''')
-    
+    conn.commit()
+    conn.close()
+
     # Orders table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS orders (
@@ -32,7 +45,7 @@ def init_db():
             FOREIGN KEY (item_id) REFERENCES menu (id)
         )
     ''')
-    
+
     # Insert initial sample menu if empty
     cursor.execute("SELECT COUNT(*) FROM menu")
     if cursor.fetchone()[0] == 0:
@@ -235,5 +248,6 @@ def reporte_meseros():
     return render_template('reporte_meseros.html', reporte=reporte)
 
 if __name__ == '__main__':
+    init_db()
     # host='0.0.0.0' allows external devices on the same Wi-Fi network to connect
     app.run(host='0.0.0.0', port=8080, debug=True)
