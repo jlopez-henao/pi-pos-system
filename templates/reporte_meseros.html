@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ventas por Mesero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 flex justify-center">
+    <div class="bg-white p-6 rounded shadow-md w-full max-w-lg">
+        <h2 class="text-2xl font-bold mb-4 text-center">Ventas Totales por Mesero</h2>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b bg-gray-50">
+                        <th class="py-2 px-3 font-semibold">Mesero</th>
+                        <th class="py-2 px-3 font-semibold text-center">Órdenes</th>
+                        <th class="py-2 px-3 font-semibold text-right">Total Vendido</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in reporte %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-2 px-3">{{ row[0] }}</td>
+                        <td class="py-2 px-3 text-center">{{ row[2] }}</td>
+                        <td class="py-2 px-3 text-right font-bold text-green-600">${{ "%.2f"|format(row[1]) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="py-4 text-center text-gray-500">No hay ventas registradas aún.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-6 text-center">
+            <a href="/" class="text-blue-600 hover:underline font-medium">← Volver al inicio</a>
+        </div>
+    </div>
+</body>
+</html>
