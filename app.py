@@ -71,22 +71,33 @@ init_db()
 
 # --- ROUTES ---
 
-# @app.route('/')
-# def waiter_page():
-#     """Waitstaff order taking interface."""
-#     conn = sqlite3.connect(DB_NAME)
-#     cursor = conn.cursor()
-#     cursor.execute("SELECT * FROM menu")
-#     menu = cursor.fetchall()
-#     conn.close()
-#     return render_template('waiter.html', menu=menu)
+@app.route('/')
+def waiter_page():
+    """Waitstaff order taking interface."""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM menu")
+    menu = cursor.fetchall()
+    conn.close()
+    return render_template('waiter.html', menu=menu)
+
 @app.route('/api/products')
 def get_products():
     category = request.args.get('category')
-    if category:
-        filtered = [p for p in products if p['category'] == category]
-        return jsonify(filtered)
-    return jsonify(products)
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    if category and category != 'All':
+        cursor.execute("SELECT id, name, category, price FROM menu WHERE category = ?", (category,))
+    else:
+        cursor.execute("SELECT id, name, category, price FROM menu")
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    # Convert database rows into dictionaries for JSON
+    products_list = [{"id": r[0], "name": r[1], "category": r[2], "price": r[3]} for r in rows]
+    return jsonify(products_list)
 
 @app.route('/submit_order', methods=['POST'])
 def submit_order():

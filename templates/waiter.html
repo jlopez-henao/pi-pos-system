@@ -1,50 +1,7 @@
-<!-- Category Navigation Tabs -->
-<div class="category-tabs mb-4">
-    <button class="btn btn-primary" onclick="loadProducts('All')">All Items</button>
-    <button class="btn btn-secondary" onclick="loadProducts('Food')">Food</button>
-    <button class="btn btn-info" onclick="loadProducts('Drinks')">Drinks</button>
-</div>
-
-<!-- Product Grid -->
-<div id="product-grid" class="row">
-    <!-- Dynamic products load here -->
-</div>
-
-<script>
-function loadProducts(category) {
-    let url = '/api/products';
-    if (category !== 'All') {
-        url += `?category=${category}`;
-    }
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            let grid = document.getElementById('product-grid');
-            grid.innerHTML = '';
-            data.forEach(item => {
-                grid.innerHTML += `
-                    <div class="col-4 mb-3">
-                        <div class="card p-3 text-center">
-                            <h5>${item.name}</h5>
-                            <p>$${item.price.toFixed(2)}</p>
-                        </div>
-                    </div>
-                `;
-            });
-        });
-}
-
-// Load all items by default on page load
-loadProducts('All');
-</script>
-
-
-
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mesonere POS</title>
+    <title>Mesonero POS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -55,15 +12,20 @@ loadProducts('All');
         <label class="block font-semibold mb-1">Número de mesa:</label>
         <input type="number" id="tableNum" value="1" class="w-full border p-2 rounded mb-4 text-lg">
 
-        <h3 class="font-semibold mb-2">Carta</h3>
-        <div class="space-y-2 mb-6">
-            {% for item in menu %}
-            <button onclick="addToCart({{ item[0] }}, '{{ item[1] }}', {{ item[3] }})" 
-                    class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded text-left font-semibold flex justify-between">
-                <span>{{ item[1] }}</span>
-                <span>${{ "%.2f"|format(item[3]) }}</span>
-            </button>
-            {% endfor %}
+        <h3 class="font-semibold mb-2">Carta / Categorías</h3>
+        
+        <!-- Category Navigation Tabs -->
+        <div class="flex flex-wrap gap-2 mb-4">
+            <button onclick="loadProducts('All')" class="category-btn bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1.5 rounded text-sm font-semibold">Todo</button>
+            <button onclick="loadProducts('Mains')" class="category-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1.5 rounded text-sm font-semibold">Platos</button>
+            <button onclick="loadProducts('Drinks')" class="category-btn bg-green-100 hover:bg-green-200 text-green-800 px-3 py-1.5 rounded text-sm font-semibold">Bebidas</button>
+            <button onclick="loadProducts('Sides')" class="category-btn bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-3 py-1.5 rounded text-sm font-semibold">Entradas</button>
+            <button onclick="loadProducts('Dessert')" class="category-btn bg-purple-100 hover:bg-purple-200 text-purple-800 px-3 py-1.5 rounded text-sm font-semibold">Postres</button>
+        </div>
+
+        <!-- Dynamic Product Grid/List -->
+        <div id="product-grid" class="space-y-2 mb-6 max-h-64 overflow-y-auto pr-1">
+            <!-- Products load here dynamically via JavaScript -->
         </div>
 
         <h3 class="font-semibold mb-2">Orden:</h3>
@@ -77,13 +39,43 @@ loadProducts('All');
     <script>
         let cart = [];
 
+        // Fetch and render products based on selected category
+        function loadProducts(category) {
+            let url = '/api/products';
+            if (category !== 'All') {
+                url += `?category=${category}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    let container = document.getElementById('product-grid');
+                    container.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        container.innerHTML = '<p class="text-gray-400 text-center py-4">No items in this category</p>';
+                        return;
+                    }
+
+                    data.forEach(item => {
+                        container.innerHTML += `
+                            <button onclick="addToCart(${item.id}, '${item.name}', ${item.price})" 
+                                    class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 px-4 rounded text-left font-semibold flex justify-between items-center shadow-sm">
+                                <span>${item.name}</span>
+                                <span class="bg-blue-700 px-2 py-0.5 rounded text-xs">$${item.price.toFixed(2)}</span>
+                            </button>
+                        `;
+                    });
+                })
+                .catch(error => console.error('Error loading products:', error));
+        }
+
         function addToCart(id, name, price) {
             cart.push({id, name, price});
             renderCart();
         }
 
         function removeFromCart(index) {
-            // Remove the specific item by its position in the cart array
             cart.splice(index, 1);
             renderCart();
         }
@@ -95,7 +87,6 @@ loadProducts('All');
                 return;
             }
 
-            // Loop through the cart with its index so we know which one to delete
             container.innerHTML = cart.map((i, index) => `
                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                     <span>${i.name} (<span class="text-gray-600">$${i.price.toFixed(2)}</span>)</span>
@@ -124,31 +115,9 @@ loadProducts('All');
                 alert('Error enviando orden.');
             }
         }
+
+        // Load all items by default when the page first opens
+        loadProducts('All');
     </script>
-    <!-- <script>
-        let cart = [];
-        function addToCart(id, name, price) {
-            cart.push({id, name, price});
-            renderCart();
-        }
-        function renderCart() {
-            const container = document.getElementById('cart');
-            if (cart.length === 0) { container.innerHTML = 'Empty'; return; }
-            container.innerHTML = cart.map(i => `<div>- ${i.name} ($${i.price.toFixed(2)})</div>`).join('');
-        }
-        async function sendOrder() {
-            const table = document.getElementById('tableNum').value;
-            if (!table || cart.length === 0) return alert('Select table and add items');
-            
-            await fetch('/submit_order', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ table_number: parseInt(table), items: cart })
-            });
-            alert('Orden enviada!');
-            cart = [];
-            renderCart();
-        }
-    </script> -->
 </body>
 </html>
