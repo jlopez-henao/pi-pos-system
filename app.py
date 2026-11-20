@@ -61,7 +61,7 @@ def init_db():
             {'id': 21, 'name': 'Quesillo', 'category': 'Dessert', 'price': 3.00},
             {'id': 22, 'name': 'Marquesa', 'category': 'Dessert', 'price': 3.00},
         ]
-        cursor.executemany("INSERT INTO menu (name, category, price) VALUES (?, ?, ?)", products)
+        cursor.executemany("INSERT INTO menu (name, category, price) VALUES (:name, :category, :price)", products)
 
     conn.commit()
     conn.close()
