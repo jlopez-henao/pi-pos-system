@@ -36,32 +36,32 @@ def init_db():
     # Insert initial sample menu if empty
     cursor.execute("SELECT COUNT(*) FROM menu")
     if cursor.fetchone()[0] == 0:
-        sample_items = [
-            ('Sopa', 'Sides', 8.00),
-            ('Bandeja paisa', 'Mains', 23.00),
-            ('Cochino frito', 'Mains', 12.00),
-            ('Parrilla para 2', 'Mains', 28.00),
-            ('Pollo a la plancha', 'Mains', 12.00),
-            ('Gordon blue pollo', 'Mains', 12.00),
-            ('Hamburguesa de pollo', 'Mains', 7.00),
-            ('Hamburguesa de carne', 'Mains', 7.00),
-            ('Pandebonos', 'Mains', 1.00),
-            ('Buñuelos', 'Mains', 1.00),
-            ('10 Arepas de maiz', 'Mains', 3.00),
-            ('Racion de tocineta con tostones', 'Mains', 6.00),
-            ('Agua', 'Drinks', 1.00),
-            ('Jugos naturales', 'Drinks', 2.50),
-            ('Papelon', 'Drinks', 2.00),
-            ('Refrescos', 'Drinks', 2.00),
-            ('Refrescos pequeño', 'Drinks', 1.50),
-            ('Malta', 'Drinks', 1.00),
-            ('Cerveza', 'Drinks', 1.00),
-            ('Caroreña', 'Drinks', 2.50),
-            ('Tiramisu', 'Dessert', 3.00),
-            ('Quesillo', 'Dessert', 6.00),
-            ('Marqueza', 'Dessert', 3.00),
+        products = [
+            {'id': 1, 'name': 'Pandebonos', 'category': 'Sides', 'price': 1.00},
+            {'id': 2, 'name': 'Sopa', 'category': 'Sides', 'price': 8.00},
+            {'id': 3, 'name': 'Bandeja paisa', 'category': 'Mains', 'price': 23.00},
+            {'id': 4, 'name': 'Cochino frito', 'category': 'Mains', 'price': 12.00},
+            {'id': 5, 'name': 'Parrilla para 2', 'category': 'Mains', 'price': 28.00},
+            {'id': 6, 'name': 'Pollo a la plancha', 'category': 'Mains', 'price': 12.00},
+            {'id': 7, 'name': 'Gordon blue pollo', 'category': 'Mains', 'price': 12.00},
+            {'id': 8, 'name': 'Hamburguesa de pollo', 'category': 'Mains', 'price': 7.00},
+            {'id': 9, 'name': 'Hamburguesa de carne', 'category': 'Mains', 'price': 7.00},
+            {'id': 10, 'name': 'Buñuelos', 'category': 'Sides', 'price': 1.00},
+            {'id': 11, 'name': 'Arepas de maiz', 'category': 'Sides', 'price': 3.00},
+            {'id': 12, 'name': 'Racion de tocineta con tostones', 'category': 'Mains', 'price': 6.00},
+            {'id': 13, 'name': 'Agua', 'category': 'Drinks', 'price': 1.00},
+            {'id': 14, 'name': 'Jugos naturales', 'category': 'Drinks', 'price': 2.50},
+            {'id': 15, 'name': 'Papelon', 'category': 'Drinks', 'price': 2.00},
+            {'id': 16, 'name': 'Refrescos', 'category': 'Drinks', 'price': 2.00},
+            {'id': 17, 'name': 'Refrescos pequeños', 'category': 'Drinks', 'price': 1.50},
+            {'id': 18, 'name': 'Malta', 'category': 'Drinks', 'price': 1.00},
+            {'id': 18, 'name': 'Cerveza', 'category': 'Drinks', 'price': 1.00},
+            {'id': 19, 'name': 'Caroreña', 'category': 'Drinks', 'price': 2.50},
+            {'id': 20, 'name': 'Tiramisu', 'category': 'Dessert', 'price': 3.00},
+            {'id': 21, 'name': 'Quesillo', 'category': 'Dessert', 'price': 3.00},
+            {'id': 22, 'name': 'Marquesa', 'category': 'Dessert', 'price': 3.00},
         ]
-        cursor.executemany("INSERT INTO menu (name, category, price) VALUES (?, ?, ?)", sample_items)
+        cursor.executemany("INSERT INTO menu (name, category, price) VALUES (?, ?, ?)", products)
 
     conn.commit()
     conn.close()
@@ -71,15 +71,22 @@ init_db()
 
 # --- ROUTES ---
 
-@app.route('/')
-def waiter_page():
-    """Waitstaff order taking interface."""
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM menu")
-    menu = cursor.fetchall()
-    conn.close()
-    return render_template('waiter.html', menu=menu)
+# @app.route('/')
+# def waiter_page():
+#     """Waitstaff order taking interface."""
+#     conn = sqlite3.connect(DB_NAME)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT * FROM menu")
+#     menu = cursor.fetchall()
+#     conn.close()
+#     return render_template('waiter.html', menu=menu)
+@app.route('/api/products')
+def get_products():
+    category = request.args.get('category')
+    if category:
+        filtered = [p for p in products if p['category'] == category]
+        return jsonify(filtered)
+    return jsonify(products)
 
 @app.route('/submit_order', methods=['POST'])
 def submit_order():

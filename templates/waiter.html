@@ -1,3 +1,46 @@
+<!-- Category Navigation Tabs -->
+<div class="category-tabs mb-4">
+    <button class="btn btn-primary" onclick="loadProducts('All')">All Items</button>
+    <button class="btn btn-secondary" onclick="loadProducts('Food')">Food</button>
+    <button class="btn btn-info" onclick="loadProducts('Drinks')">Drinks</button>
+</div>
+
+<!-- Product Grid -->
+<div id="product-grid" class="row">
+    <!-- Dynamic products load here -->
+</div>
+
+<script>
+function loadProducts(category) {
+    let url = '/api/products';
+    if (category !== 'All') {
+        url += `?category=${category}`;
+    }
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+            data.forEach(item => {
+                grid.innerHTML += `
+                    <div class="col-4 mb-3">
+                        <div class="card p-3 text-center">
+                            <h5>${item.name}</h5>
+                            <p>$${item.price.toFixed(2)}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+}
+
+// Load all items by default on page load
+loadProducts('All');
+</script>
+
+
+
 <!DOCTYPE html>
 <html>
 <head>
