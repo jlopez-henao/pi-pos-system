@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 User=ec2-user
-WorkingDirectory=/home/ec2-user/pi-pos-system
-ExecStart=/home/ec2-user/pi-pos-system/venv/bin/python app.py
+WorkingDirectory=/home/ec2-user/git/pi-pos-system
+ExecStart=/home/ec2-user/git/pi-pos-system/venv/bin/python app.py
 Restart=always
 RestartSec=5
 
