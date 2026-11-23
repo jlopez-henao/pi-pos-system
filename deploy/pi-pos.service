@@ -1,11 +1,11 @@
 [Unit]
-Description=Pi POS System Flask App
+Description=Pi POS System Gunicorn App
 After=network.target
 
 [Service]
 User=ec2-user
 WorkingDirectory=/home/ec2-user/git/pi-pos-system
-ExecStart=/home/ec2-user/git/pi-pos-system/venv/bin/python app.py
+ExecStart=/home/ec2-user/git/pi-pos-system/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 app:app
 Restart=always
 RestartSec=5
 
