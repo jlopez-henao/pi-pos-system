@@ -70,6 +70,7 @@ def init_db():
 init_db()
 
 # --- ROUTES ---
+MAIN_SIDE_OPTIONS = ["Arroz", "Tostones", "Tajadas", "Ensalada mixta", "Ensalada rallada", "Sin contorno"]
 
 @app.route('/')
 def waiter_page():
@@ -79,7 +80,7 @@ def waiter_page():
     cursor.execute("SELECT * FROM menu")
     menu = cursor.fetchall()
     conn.close()
-    return render_template('waiter.html', menu=menu)
+    return render_template('waiter.html', menu=menu, side_options=MAIN_SIDE_OPTIONS)
 
 @app.route('/api/products')
 def get_products():
